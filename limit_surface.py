@@ -8,6 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class LimitSurface:
 
     def __init__(self, coefficient, pressure, radius, normal_force):
@@ -18,6 +19,10 @@ class LimitSurface:
         self.pd = pressure # Assuming circular pressure distribution for now
         self.radius = radius
         self.nf = normal_force
+
+        self.ls_plot_vectors = []
+        self.vs_plot_vectors = []
+        self.colors = {'purple': (92/255,38/255,134/255,1.0), 'blue': (54/255,205/255,196/255,1.0), 'yellow': (244/255,214/255,118/255,1.0), 'gray': (92/255, 90/255, 90/255, 0.09)}
         
         self.create_surface()
     
@@ -30,7 +35,6 @@ class LimitSurface:
         Returns:
             None
         """
-
         # Tangential max
         self.ft_max = self.fc * self.nf
 
@@ -97,21 +101,29 @@ class LimitSurface:
         F_4 = f_2 + np.array([0,0,0,0,0,m_4])
         return np.array([F_1, F_2, F_3, F_4])
 
-    def fit_vec_to_surface(self, vec):
+    def fit_vec_to_surface(self, vec, a=None, b=None, c=None):
         """
         Adjusts vector to lie on the surface for easy viz
 
         Params: 
-            vec ([3x1] ndarray): Vector
+            vec ([6x1] ndarray): Vector
+            a,b,c (double): coeff of ellipsoid
         Returns:
-            vec ([3x1] ndarray): Vector fit to limit surface 
+            vec ([6x1] ndarray): Vector fit to limit surface 
         """
 
         v_hat = vec / np.linalg.norm(vec)
 
+        if a is None:
+            a = self.ft_max
+        if b is None:
+            b = self.ft_max
+        if c is None:
+            c = self.m_max
+
         # find constant multiple and fit
         # solving for c*F_1_hat that fits ellipsoid equation
-        fit = lambda v_hat: v_hat * math.sqrt((1/(v_hat[3]**2/self.ft_max**2 + v_hat[4]**2/self.ft_max**2 + v_hat[5]**2/self.m_max**2)))
+        fit = lambda v_hat: v_hat * math.sqrt((1/(v_hat[3]**2/a**2 + v_hat[4]**2/b**2 + v_hat[5]**2/c**2)))
 
         return fit(v_hat)
 
@@ -146,35 +158,24 @@ class LimitSurface:
         z = rz * np.outer(np.ones_like(u), np.cos(v))
 
         # Vectors (6D because not all vectors are from origin)
+        for v in self.ls_plot_vectors:
+            X, Y, Z, U, V, W, color = zip(*[v])
+            ax.quiver(X, Y, Z, U, V, W, color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
 
-        # example vector
-        v = np.array([[0, 0, 0, x[20][20], y[20][20], z[20][20]]])
-        X, Y, Z, U, V, W = zip(*v)
-        ax.quiver(X, Y, Z, U, V, W, color = (92/255,38/255,134/255,1.0), arrow_length_ratio=0.2, linewidths=4.0)
-
-        # example normal
-        normal_vector = self.find_normal(v[0])
-        X, Y, Z, U, V, W = zip(*[normal_vector])
-        ax.quiver(X, Y, Z, U, V, W, color = (54/255,205/255,196/255,1.0), arrow_length_ratio=0.3, linewidths=3.0)
+            normal_vector = self.find_normal(v[0])
+            X, Y, Z, U, V, W = zip(*[normal_vector])
+            ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.3, linewidths=3.0)
 
         # plot friction cone
         if cone is not None:
             self.plot_cone(cone, ax, rx, ry, rz)
-            self.plot_twists(cone, ax)
+            self.plot_twists_on_ls(cone, ax)
 
-        # Plot:
+        # plot limit surface
+        ax.plot_surface(x, y, z,  rstride=5, cstride=5, color= self.colors['gray'])
 
-        ax.plot_surface(x, y, z,  rstride=5, cstride=5, color= (92/255, 90/255, 90/255, 0.09))
-        ax.set_xlabel(r'$f_x$')
-        ax.set_ylabel(r'$f_y$')
-        ax.set_zlabel(r'$m_z$')
-        ax.zaxis.set_rotate_label(False) 
-        ax.yaxis.set_rotate_label(False) 
-        ax.xaxis.set_rotate_label(False) 
-        max_radius = max(rx, ry, rz) + 1.0
-        ax.set_xlim(-max_radius, max_radius)
-        ax.set_ylim(max_radius, -max_radius)
-        ax.set_zlim(-max_radius, max_radius)
+        # Plot design
+        self.style_axis(ax, 'Limit Surface', '$f_x$', '$f_y$', '$m_z$', max(rx,ry,rz))
 
     def plot_cone(self, cone, ax, rx, ry, rz):
         """
@@ -192,25 +193,39 @@ class LimitSurface:
         cone = np.array(list(map(self.fit_vec_to_surface, cone)))
 
         X, Y, Z, U, V, W = zip(*cone)
-        ax.quiver(X, Y, Z, U, V, W, color = (244/255,214/255,118/255,1.0), arrow_length_ratio=0.2, linewidths=4.0)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['yellow'], arrow_length_ratio=0.2, linewidths=4.0)
+
+        self.connect_cone(ax, cone, rx, ry, rz)
+
+    def connect_cone(self, ax, cone, rx, ry, rz):
+        """
+        Calculates line on limit surface connecting two points
+
+        Params: 
+            ax (matplotlib axis): axis to plot on
+
+            cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
+
+            rx, ry, rz (doubles): coefficients of ellipsoid
+        Returns:
+            None
+        """
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= (244/255, 214/255, 118/255, 1.0), linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[2][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= (244/255, 214/255, 118/255, 1.0), linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[2][3:], cone[3][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= (244/255, 214/255, 118/255, 1.0), linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[3][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= (244/255, 214/255, 118/255, 1.0), linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
 
     def calculate_connector(self, p1, p2, rx, ry, rz):
         """
         Calculates line on limit surface connecting two points
-
-        #WARNING this is not a 100% accurate drawing becuase of the way I am drawing the horizontal component.
 
         Params: 
             p1, p2 ([3x1] ndarray): Vectors defining the points to connect
@@ -232,8 +247,11 @@ class LimitSurface:
         full_vecs = np.zeros((vecs.shape[0], 6))
         full_vecs[:,3:] = vecs
 
+        rx = np.ones(full_vecs.shape[0])*rx
+        ry = np.ones(full_vecs.shape[0])*ry
+        rz = np.ones(full_vecs.shape[0])*rz
         # fit to surface
-        vecs_fit = np.array(list(map(self.fit_vec_to_surface, full_vecs)))
+        vecs_fit = np.array(list(map(self.fit_vec_to_surface, full_vecs, rx, ry, rz)))
 
         # separate components
         x_l = np.array([vecs_fit[:,3]])
@@ -242,7 +260,7 @@ class LimitSurface:
 
         return x_l, y_l, z_l
 
-    def plot_twists(self, cone, ax):
+    def plot_twists_on_ls(self, cone, ax):
         """
         Plots friction cone on limit surface
 
@@ -257,10 +275,51 @@ class LimitSurface:
         cone = np.array(list(map(self.fit_vec_to_surface, cone)))
 
         twist_cone = self.find_valid_twists(cone)
+        print(twist_cone)
 
         X, Y, Z, U, V, W = zip(*twist_cone)
-        ax.quiver(X, Y, Z, U, V, W, color = (54/255,205/255,196/255,1.0), arrow_length_ratio=0.2, linewidths=2.0)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.2, linewidths=2.0)
 
+    def plot_vs(self, ax, cone=None, vecs=None):
+        """
+        Plots twist sphere with cones and/or additional vectors
+
+        Params: 
+            cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
+            vecs ([-1x3x1] ndarray): Vectors to plot 
+        Returns:
+            None
+        """
+
+        # Twist cone
+        cone = np.array(list(map(self.fit_vec_to_surface, cone)))
+        twist_cone = np.array(self.find_valid_twists(cone), dtype=np.double)
+        twist_cone[:,:3] = 0
+        abc = np.ones(twist_cone.shape[0])
+        twist_fit = np.array(list(map(self.fit_vec_to_surface, twist_cone, abc, abc, abc)))
+
+        X, Y, Z, U, V, W = zip(*twist_fit)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['yellow'], arrow_length_ratio=0.2, linewidths=4.0)
+
+        self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0)
+
+        # Vectors
+        for v in self.vs_plot_vectors:
+            X, Y, Z, U, V, W, color = zip(*[v])
+            ax.quiver(float(X[0]), float(Y[0]), float(Z[0]), float(U[0]), float(V[0]), float(W[0]), color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
+
+        # Unit velocity sphere
+        u = np.linspace(0, 2 * np.pi, 100)
+        v = np.linspace(0, np.pi, 100)
+
+        x = np.outer(np.cos(u), np.sin(v))
+        y = np.outer(np.sin(u), np.sin(v))
+        z = np.outer(np.ones_like(u), np.cos(v))
+
+        ax.plot_surface(x, y, z,  rstride=5, cstride=5, color= self.colors['gray'])
+
+        # Plot design
+        self.style_axis(ax, 'Unit Velocity Sphere', '$v_x$', '$v_y$', '$\omega$', 1.0)
 
     def plot_all(self, cone=None, vecs=None):
         """
@@ -273,11 +332,72 @@ class LimitSurface:
             None
         """
         fig = plt.figure(figsize=(20,8))  # Square figure
-        ax_ls = fig.add_subplot(111, projection='3d')
+        ax_ls = fig.add_subplot(121, projection='3d')
         ax_vs = fig.add_subplot(122, projection='3d')
 
         self.plot_ls(ax_ls, cone)
+        self.plot_vs(ax_vs, cone)
 
         plt.show()
 
+    def style_axis(self, ax, title, x_title, y_title, z_title, limit):
+        """
+        Styles a given subplot with axis labels limits etc.
 
+        Params: 
+            ax (matplotlib axis): matplotlib graph axis
+
+            title (str): title of plot
+
+            x_title (str): x-axis title
+
+            y_title (str): y-axis title
+
+            z_title (str): z-axis title
+
+            limit (double): limit of axes
+
+        Returns:
+            None
+        """
+        ax.set_title(title, fontdict={'fontsize': 30}, pad=50)
+        ax.set_xlabel(r'{}'.format(x_title))
+        ax.set_ylabel(r'{}'.format(y_title))
+        ax.set_zlabel(r'{}'.format(z_title))
+        ax.zaxis.set_rotate_label(False) 
+        ax.yaxis.set_rotate_label(False) 
+        ax.xaxis.set_rotate_label(False) 
+        #ax.set_xlim(-limit, limit)
+        #ax.set_ylim(limit, -limit)
+        #ax.set_zlim(-limit, limit)
+
+    def plot_vec(self, vec, plot_name, normalize=False, color='purple'):
+        """
+        Plots vector on given plot
+
+        Params: 
+            vec ([3x1] ndarray): vector to plot
+
+            plot_name (str): name of plot (ls or vs)
+
+            normalize (bool): whether or not to normalize vector
+
+        Returns:
+            None
+        """
+
+        if plot_name == 'vs':
+            if normalize:
+                vec = self.fit_vec_to_surface(np.array([0,0,0,vec[0],vec[1],vec[2]], dtype=np.double), 1.0, 1.0, 1.0)
+                vec = np.append(vec, color)
+                self.vs_plot_vectors.append(vec)
+            else:
+                self.vs_plot_vectors.append([0,0,0,vec[0], vec[1], vec[2], color])
+
+        if plot_name == 'ls':
+            if normalize:
+                vec = self.fit_vec_to_surface(np.array([0,0,0,vec[0],vec[1],vec[2]], dtype=np.double))
+                vec = np.append(vec, color)
+                self.ls_plot_vectors.append(vec)
+            else:
+                self.ls_plot_vectors.append([0,0,0,vec[0], vec[1], vec[2], color])
