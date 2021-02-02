@@ -6,7 +6,7 @@ from primitives import Primitives
 
 # Pushing params
 normal_force = 5.0 # N block weight
-radius = 0.05 # block radius in meters (assuming it is a circle)
+radius = 0.07 # block radius in meters (assuming it is a circle)
 ls_coefficient = 0.8 # coefficient of friction between block and floor
 coefficient = 0.8 # coefficient of friction between block and car
 

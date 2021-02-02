@@ -22,7 +22,7 @@ class LimitSurface:
 
         self.ls_plot_vectors = []
         self.vs_plot_vectors = []
-        self.colors = {'purple': (92/255,38/255,134/255,1.0), 'blue': (54/255,205/255,196/255,1.0), 'yellow': (244/255,214/255,118/255,1.0), 'gray': (92/255, 90/255, 90/255, 0.09)}
+        self.colors = {'purple': (92/255,38/255,134/255,1.0), 'blue': (54/255,205/255,196/255,1.0), 'yellow': (244/255,214/255,118/255,1.0), 'gray': (92/255, 90/255, 90/255, 0.09), 'black':(20/255,20/255,20/255,1.0)}
         
         self.create_surface()
     
@@ -193,7 +193,7 @@ class LimitSurface:
         cone = np.array(list(map(self.fit_vec_to_surface, cone)))
 
         X, Y, Z, U, V, W = zip(*cone)
-        ax.quiver(X, Y, Z, U, V, W, color = self.colors['yellow'], arrow_length_ratio=0.2, linewidths=4.0)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['black'], arrow_length_ratio=0.1, linewidths=2.0)
 
         self.connect_cone(ax, cone, rx, ry, rz)
 
@@ -212,16 +212,16 @@ class LimitSurface:
         """
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[2][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[2][3:], cone[3][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[3][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['yellow'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
 
     def calculate_connector(self, p1, p2, rx, ry, rz):
         """
@@ -237,7 +237,7 @@ class LimitSurface:
 
         # vector between the points
         connect_vec = p2 - p1
-        t = np.linspace(0, 1.0, 100)
+        t = np.linspace(0, 1.0, 4000)
         
 
         # indexs along connect_vec
@@ -274,8 +274,9 @@ class LimitSurface:
         """
         cone = np.array(list(map(self.fit_vec_to_surface, cone)))
 
-        twist_cone = self.find_valid_twists(cone)
-        print(twist_cone)
+        twist_cone = np.array(self.find_valid_twists(cone), dtype=np.double)
+        normalize = lambda vec: [vec[0], vec[1], vec[2], vec[3]/np.linalg.norm(vec[3:]), vec[4]/np.linalg.norm(vec[3:]), vec[5]/np.linalg.norm(vec[3:])]
+        twist_cone = list(map(normalize, twist_cone))
 
         X, Y, Z, U, V, W = zip(*twist_cone)
         ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.2, linewidths=2.0)
@@ -299,7 +300,7 @@ class LimitSurface:
         twist_fit = np.array(list(map(self.fit_vec_to_surface, twist_cone, abc, abc, abc)))
 
         X, Y, Z, U, V, W = zip(*twist_fit)
-        ax.quiver(X, Y, Z, U, V, W, color = self.colors['yellow'], arrow_length_ratio=0.2, linewidths=4.0)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['black'], arrow_length_ratio=0.2, linewidths=4.0)
 
         self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0)
 
@@ -367,9 +368,9 @@ class LimitSurface:
         ax.zaxis.set_rotate_label(False) 
         ax.yaxis.set_rotate_label(False) 
         ax.xaxis.set_rotate_label(False) 
-        #ax.set_xlim(-limit, limit)
-        #ax.set_ylim(limit, -limit)
-        #ax.set_zlim(-limit, limit)
+        ax.set_xlim(-limit, limit)
+        ax.set_ylim(limit, -limit)
+        ax.set_zlim(-limit, limit)
 
     def plot_vec(self, vec, plot_name, normalize=False, color='purple'):
         """
