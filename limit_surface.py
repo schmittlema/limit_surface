@@ -237,7 +237,7 @@ class LimitSurface:
 
         # vector between the points
         connect_vec = p2 - p1
-        t = np.linspace(0, 1.0, 4000)
+        t = np.linspace(0, 1.0, 100)
         
 
         # indexs along connect_vec
@@ -281,21 +281,18 @@ class LimitSurface:
         X, Y, Z, U, V, W = zip(*twist_cone)
         ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.2, linewidths=2.0)
 
-    def plot_vs(self, ax, cone=None, vecs=None):
+    def plot_vs(self, ax, twist_cone=None, vecs=None):
         """
         Plots twist sphere with cones and/or additional vectors
 
         Params: 
-            cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
+            twist_cone ([4x3x1] ndarray): Four vectors making the composite twist cone
             vecs ([-1x3x1] ndarray): Vectors to plot 
         Returns:
             None
         """
 
         # Twist cone
-        cone = np.array(list(map(self.fit_vec_to_surface, cone)))
-        twist_cone = np.array(self.find_valid_twists(cone), dtype=np.double)
-        twist_cone[:,:3] = 0
         abc = np.ones(twist_cone.shape[0])
         twist_fit = np.array(list(map(self.fit_vec_to_surface, twist_cone, abc, abc, abc)))
 
@@ -322,7 +319,7 @@ class LimitSurface:
         # Plot design
         self.style_axis(ax, 'Unit Velocity Sphere', '$v_x$', '$v_y$', '$\omega$', 1.0)
 
-    def plot_all(self, cone=None, vecs=None):
+    def plot_all(self, cone=None, twist_cone=None, vecs=None):
         """
         Plots limit surface & twist sphere with cones and/or additional vectors
 
@@ -337,7 +334,7 @@ class LimitSurface:
         ax_vs = fig.add_subplot(122, projection='3d')
 
         self.plot_ls(ax_ls, cone)
-        self.plot_vs(ax_vs, cone)
+        self.plot_vs(ax_vs, twist_cone)
 
         plt.show()
 

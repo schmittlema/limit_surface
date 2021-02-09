@@ -15,21 +15,21 @@ class Primitives:
         self.max_steering_angle = max_steering_angle
         self.w = self.length/np.tan(self.max_steering_angle) # H + W/2 in kinematic car model
 
-    def find_velocity_limits(self, twist_cone, speed, radius):
+    def find_velocity_limits(self, twist_cone, speed, dist):
         """
         Find the angular velocity limits pusher given twist cone * max steering angle 
 
         Params: 
             twist_cone ([4x6x1] ndarray): Four vectors making the composite twist cone
             speed (double): fixed speed of car
-            radius (double): object radius
+            dist (double): COM to pusher 
         Returns:
            max_car ([3x1] ndarray): un-normalized vector for maximum steering angle
            max_ls ([3x1] ndarray): un-normalized vector for maximum angular velocity
         """
 
         # car's limits
-        min_turning_radius = np.sqrt(self.w**2 + (self.length+radius)**2)
+        min_turning_radius = self.length/np.tan(self.max_steering_angle)
         max_angular_velocity = speed/min_turning_radius
         max_car = np.array([0, speed, max_angular_velocity])
 
@@ -37,6 +37,29 @@ class Primitives:
         min_ls, max_ls = self.pushing_limits(twist_cone, speed)
 
         return max_car, min_ls, max_ls
+
+    def b2c_twists(self, block_twist, dist):
+        """
+        Convert block twist to car twist
+        v_car = v_block + w x r
+
+        Params: 
+            block_twist ([6x1] ndarray): Vector twist for block
+            dist (double): COM to pusher 
+        Returns:
+            car_twist ([6x1] ndarray): Vector twist for car (rear axle)
+        """
+
+        r = np.array([0, -(self.length + dist), 0]) # vector from COM of block to center back axle
+        omega = np.array([0,0,block_twist[-1]]) # angular velocity
+        diff_twist = np.cross(omega, r)
+        twist_car_short = block_twist[3:] + diff_twist # add velocities
+
+        # create full vec
+        car_twist = np.zeros((6,))
+        car_twist[3:] = twist_car_short
+
+        return car_twist
 
     def pushing_limits(self, twist_cone, speed):
         """
@@ -49,6 +72,8 @@ class Primitives:
            min_ls ([3x1] ndarray): un-normalized vector for minimum angular velocity
            max_ls ([3x1] ndarray): un-normalized vector for maximum angular velocity
         """
+        # TODO fix this so that limit vectors can be on the side edges too
+
         # find maximum angular velocity vecs
         max_omega_idx = np.argmax(twist_cone[:,-1])
         t_cone = np.zeros((twist_cone.shape))
