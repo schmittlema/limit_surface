@@ -1,4 +1,5 @@
 # The Limit Surface Class
+# Does not contain car specific params
 # Schmittle
 
 import math
@@ -111,7 +112,6 @@ class LimitSurface:
         Returns:
             vec ([6x1] ndarray): Vector fit to limit surface 
         """
-
         v_hat = vec / np.linalg.norm(vec)
 
         if a is None:
@@ -238,7 +238,6 @@ class LimitSurface:
         # vector between the points
         connect_vec = p2 - p1
         t = np.linspace(0, 1.0, 100)
-        
 
         # indexs along connect_vec
         vecs = np.outer(t,connect_vec) + np.tile(p1,(t.shape[0],1))
