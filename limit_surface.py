@@ -6,6 +6,7 @@ import math
 import sympy as sp
 import numpy as np
 import matplotlib
+import warnings
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -210,6 +211,8 @@ class LimitSurface:
         Returns:
             None
         """
+        # deprecation warning from numpy with matplotlib functions
+        warnings.filterwarnings("ignore")
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[1][3:], rx, ry, rz)
         ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
