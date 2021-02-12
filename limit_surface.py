@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import warnings
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -198,7 +199,7 @@ class LimitSurface:
 
         self.connect_cone(ax, cone, rx, ry, rz)
 
-    def connect_cone(self, ax, cone, rx, ry, rz):
+    def connect_cone(self, ax, cone, rx, ry, rz, color=None):
         """
         Calculates line on limit surface connecting two points
 
@@ -208,23 +209,28 @@ class LimitSurface:
             cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
 
             rx, ry, rz (doubles): coefficients of ellipsoid
+
+            color (str): one of the color strings from self.color 
         Returns:
             None
         """
         # deprecation warning from numpy with matplotlib functions
         warnings.filterwarnings("ignore")
 
+        if color is None:
+            color = 'black'
+
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors[color], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[0][3:], cone[2][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors[color], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[2][3:], cone[3][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors[color], linewidths=4.0)
 
         x_l, y_l, z_l = self.calculate_connector(cone[3][3:], cone[1][3:], rx, ry, rz)
-        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['black'], linewidths=4.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors[color], linewidths=4.0)
 
     def calculate_connector(self, p1, p2, rx, ry, rz):
         """
@@ -237,7 +243,6 @@ class LimitSurface:
         Returns:
             x_l, y_l, z_l ([3x100] ndarrays): Positions of points along connection 
         """
-
         # vector between the points
         connect_vec = p2 - p1
         t = np.linspace(0, 1.0, 100)
@@ -299,14 +304,17 @@ class LimitSurface:
         twist_fit = np.array(list(map(self.fit_vec_to_surface, twist_cone, abc, abc, abc)))
 
         X, Y, Z, U, V, W = zip(*twist_fit)
-        ax.quiver(X, Y, Z, U, V, W, color = self.colors['black'], arrow_length_ratio=0.2, linewidths=4.0)
+        ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.1, linewidths=4.0)
 
-        self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0)
+        self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0, color='blue')
 
         # Vectors
         for v in self.vs_plot_vectors:
             X, Y, Z, U, V, W, color = zip(*[v])
             ax.quiver(float(X[0]), float(Y[0]), float(Z[0]), float(U[0]), float(V[0]), float(W[0]), color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
+
+        x_l, y_l, z_l = self.calculate_connector(np.array(self.vs_plot_vectors[-2][3:6], dtype=np.double), np.array(self.vs_plot_vectors[-1][3:6], dtype=np.double), 1.0,1.0,1.0)
+        ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['purple'], linewidths=4.0)
 
         # Unit velocity sphere
         u = np.linspace(0, 2 * np.pi, 100)
@@ -360,6 +368,16 @@ class LimitSurface:
         Returns:
             None
         """
+        if title == 'Unit Velocity Sphere':
+            pop_a = mpatches.Patch(color=self.colors['blue'], label='Stable Velocity Twists')
+            pop_b = mpatches.Patch(color=self.colors['black'], label="Car's limits")
+            pop_c = mpatches.Patch(color=self.colors['purple'], label="Pushing limits")
+            ax.legend(handles=[pop_a,pop_b, pop_c], loc='lower left', bbox_to_anchor=(0.0, -0.1))
+        else:
+            pop_a = mpatches.Patch(color=self.colors['blue'], label='Velocity Twists')
+            pop_b = mpatches.Patch(color=self.colors['black'], label='Composite Wrench Cone')
+            ax.legend(handles=[pop_a,pop_b], loc='lower left', bbox_to_anchor=(0.0, -0.1))
+
         ax.set_title(title, fontdict={'fontsize': 30}, pad=50)
         ax.set_xlabel(r'{}'.format(x_title))
         ax.set_ylabel(r'{}'.format(y_title))
