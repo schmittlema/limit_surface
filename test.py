@@ -64,6 +64,8 @@ ls.plot_vec(max_ls, 'vs', normalize=True, color='purple')
 ls.plot_all(cone, twist_cone_converted)
 
 # SBPL motion primitive calculation
+"""
+#WIP
 timestep = 1.0 # seconds
 resolution = 0.1 # meters. map resolution
 num_angles = 16 # number of discretized angles 
@@ -98,3 +100,4 @@ print("res_delta_x: {}".format(delta_x/resolution))
 print("res_delta_y: {}".format(delta_y/resolution))
 print("res_delta_theta: {}".format(delta_theta/angle_resolution))
 print("length: {}".format(np.sqrt(delta_x**2 + delta_y**2)))
+"""
