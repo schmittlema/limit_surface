@@ -1,11 +1,10 @@
-# The Pushing Car Motion Primitives
-# Primitives respect limit surface and kinematic constraints
+# The Pushing Car
+# Controls that respect limit surface and kinematic constraints
 # Schmittle
 
 import numpy as np
 
-
-class Primitives:
+class Kinematic_Car:
 
     def __init__(self, car_length, bumper2frontaxle, max_steering_angle):
         """

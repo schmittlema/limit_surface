@@ -2,11 +2,11 @@ import math
 import numpy as np
 import sympy as sp
 import limit_surface as ls
-from primitives import Primitives
+from kinematic_car import Kinematic_Car
 
 # Pushing params
 normal_force = 5.0 # N block weight
-dist = 0.5 # COM to edge FAKE NUMBER 0.05 is more accurate but creates a disk limit surface which is hard to viz
+dist = 0.5 # COM to edge 
 radius = np.sqrt(2*dist**2) # block radius in meters (assuming it is a circle)
 ls_coefficient = 0.5 # coefficient of friction between block and floor
 coefficient = 0.4 # coefficient of friction between block and car
@@ -46,11 +46,11 @@ ls = ls.LimitSurface(ls_coefficient, pressure_distribution, radius, normal_force
 cone = ls.create_friction_cone(coefficient, np.array([-dist, -dist, 0.0]), np.array([dist, -dist, 0.0]))
 twist_cone = ls.find_valid_twists(cone)
 
-# Motion Primitives
-mprims = Primitives(wheelbase, bumper_to_front_axle, max_steering_angle)
+# Motion of kinematic_car
+kcar = Kinematic_Car(wheelbase, bumper_to_front_axle, max_steering_angle)
 dists = np.ones(twist_cone.shape[0]) * dist
-twist_cone_converted = np.array(list(map(mprims.b2c_twists,twist_cone, dists)))
-max_car, min_ls, max_ls = mprims.find_velocity_limits(twist_cone_converted, speed, dist)
+twist_cone_converted = np.array(list(map(kcar.b2c_twists,twist_cone, dists)))
+max_car, min_ls, max_ls = kcar.find_velocity_limits(twist_cone_converted, speed, dist)
 
 # Plot limits of car
 ls.plot_vec(max_car, 'vs', normalize=True, color='black')
