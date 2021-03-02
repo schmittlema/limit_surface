@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import sympy as sp
-import limit_surface as ls
+from limit_surface import LimitSurface
 from kinematic_car import Kinematic_Car
 
 # Pushing params
@@ -42,7 +42,7 @@ print('Speed: {}'.format(speed))
 print()
 
 # Pushing constraints
-ls = ls.LimitSurface(ls_coefficient, pressure_distribution, radius, normal_force)
+ls = LimitSurface(ls_coefficient, pressure_distribution, radius, normal_force)
 cone = ls.create_friction_cone(coefficient, np.array([-dist, -dist, 0.0]), np.array([dist, -dist, 0.0]))
 twist_cone = ls.find_valid_twists(cone)
 
