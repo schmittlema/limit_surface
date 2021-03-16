@@ -6,14 +6,14 @@ import numpy as np
 
 class Kinematic_Car:
 
-    def __init__(self, car_length, bumper2frontaxle, max_steering_angle):
+    def __init__(self, wheelbase, bumper2frontaxle, max_steering_angle):
         """
         Constructor
         """
-        self.length = car_length
+        self.wheelbase = wheelbase 
         self.bump2_front_axle = bumper2frontaxle 
         self.max_steering_angle = max_steering_angle
-        self.w = self.length/np.tan(self.max_steering_angle) # H + W/2 in kinematic car model
+        self.w = self.wheelbase/np.tan(self.max_steering_angle) # H + W/2 in kinematic car model
 
     def find_velocity_limits(self, twist_cone, speed, dist):
         """
@@ -29,7 +29,7 @@ class Kinematic_Car:
         """
 
         # car's limits
-        min_turning_radius = self.length/np.tan(self.max_steering_angle)
+        min_turning_radius = self.wheelbase/np.tan(self.max_steering_angle)
         max_angular_velocity = speed/min_turning_radius
         max_car = np.array([0, speed, max_angular_velocity])
 
@@ -50,7 +50,7 @@ class Kinematic_Car:
             car_twist ([6x1] ndarray): Vector twist for car (rear axle)
         """
 
-        r = np.array([0, -(self.length + dist + self.bump2_front_axle), 0]) # vector from COM of block to center back axle
+        r = np.array([0, -(self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from COM of block to center back axle
         omega = np.array([0, 0, block_twist[-1]]) # angular velocity
         diff_twist = np.cross(omega, r)
         twist_car_short = block_twist[3:] + diff_twist # add velocities
@@ -58,19 +58,6 @@ class Kinematic_Car:
         # create full vector
         car_twist = np.zeros((6,))
         car_twist[3:] = twist_car_short
-
-        """
-        print("block twist")
-        print(block_twist)
-        print("omega")
-        print(omega)
-        print("r")
-        print(r)
-        print("diff")
-        print(diff_twist)
-        print("car twist")
-        print(twist_car_short)
-        """
 
         return car_twist
 
