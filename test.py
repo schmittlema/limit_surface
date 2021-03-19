@@ -7,7 +7,7 @@ from kinematic_car import Kinematic_Car
 # Pushing params
 normal_force = 5.0 # N block weight
 dist = 0.05 # COM to edge of block
-radius = np.sqrt(2*dist**2) # block radius in meters (assuming it is a circle)
+radius = np.sqrt(2*(dist**2)) # block radius in meters (assuming it is a circle)
 ls_coefficient = 0.5 # coefficient of friction between block and floor
 coefficient = 0.5 # coefficient of friction between block and car
 

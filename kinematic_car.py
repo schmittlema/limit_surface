@@ -1,5 +1,6 @@
 # The Pushing Car
 # Controls that respect limit surface and kinematic constraints
+# Assuming rear-axle Kinematic car model
 # Schmittle
 
 import numpy as np
@@ -24,8 +25,9 @@ class Kinematic_Car:
             speed (double): fixed speed of car
             dist (double): COM to pusher 
         Returns:
-           max_car ([3x1] ndarray): un-normalized vector for maximum steering angle
-           max_ls ([3x1] ndarray): un-normalized vector for maximum angular velocity
+           max_car ([3x1] ndarray): un-normalized vector for maximum angular velocity steering angle
+           max_ls ([3x1] ndarray): un-normalized vector for pushing limits (max angular velocity) given twist cone 
+           min_ls ([3x1] ndarray): un-normalized vector for pushing limits (min angular velocity) given twist cone
         """
 
         # car's limits
@@ -50,8 +52,8 @@ class Kinematic_Car:
             car_twist ([6x1] ndarray): Vector twist for car (rear axle)
         """
 
-        r = np.array([0, -(self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from COM of block to center back axle
-        omega = np.array([0, 0, block_twist[-1]]) # angular velocity
+        r = np.array([0.0, -(self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from COM of block to center back axle
+        omega = np.array([0.0, 0.0, block_twist[-1]]) # angular velocity
         diff_twist = np.cross(omega, r)
         twist_car_short = block_twist[3:] + diff_twist # add velocities
 
