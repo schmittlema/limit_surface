@@ -92,10 +92,10 @@ class LimitSurface:
         f_2 = np.array([0, 0, 0, cof * self.ft_max, self.ft_max, 0])
         
         # moments
-        m_1 = np.cross(f_1[3:], r_1)[2]
-        m_2 = np.cross(f_2[3:], r_1)[2]
-        m_3 = np.cross(f_1[3:], r_2)[2]
-        m_4 = np.cross(f_2[3:], r_2)[2]
+        m_1 = np.cross(r_1, f_1[3:])[2]
+        m_2 = np.cross(r_1, f_2[3:])[2]
+        m_3 = np.cross(r_2, f_1[3:])[2]
+        m_4 = np.cross(r_2, f_2[3:])[2]
 
         # friction cone vectors
         F_1 = f_1 + np.array([0,0,0,0,0,m_1])
