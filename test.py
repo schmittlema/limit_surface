@@ -2,6 +2,7 @@ import math
 import numpy as np
 import sympy as sp
 import utils
+from plotter import Plotter
 from limit_surface import LimitSurface
 from stable import STABLE
 from kinematic_car import Kinematic_Car
@@ -48,16 +49,18 @@ print('STABLE Pushing min turning radius: {}'.format(round(stable_min_turning_ra
 print('STABLE Pushing max steering angle: {}'.format(round(stable_max_steering_angle,3)))
 
 # Plot limits of car
-ls.plot_vec(max_car, 'vs', normalize=True, color='black')
+plotter = Plotter()
+plotter.set_ls_params(ls.ft_max, ls.m_max)
+plotter.plot_vec(max_car, 'vs', normalize=True, color='black')
 max_car[2] = max_car[2]*-1 # it's even
-ls.plot_vec(max_car, 'vs', normalize=True, color='black')
+plotter.plot_vec(max_car, 'vs', normalize=True, color='black')
 
 # Plot limits of pushing
-ls.plot_vec(min_ls, 'vs', normalize=True, color='purple')
-ls.plot_vec(max_ls, 'vs', normalize=True, color='purple')
+plotter.plot_vec(min_ls, 'vs', normalize=True, color='purple')
+plotter.plot_vec(max_ls, 'vs', normalize=True, color='purple')
 
 # Plot limits of pushing with STABLE
-ls.plot_vec(min_stable, 'vs', normalize=True, color='pink')
-ls.plot_vec(max_stable, 'vs', normalize=True, color='pink')
+plotter.plot_vec(min_stable, 'vs', normalize=True, color='pink')
+plotter.plot_vec(max_stable, 'vs', normalize=True, color='pink')
 
-ls.plot_all(cone, twist_cone_converted)
+plotter.plot_all(ls, cone, twist_cone_converted)
