@@ -1,5 +1,5 @@
 # Limit Surface
-##### Author: schmittle
+##### Author: Schmittle
 Basic limit surface code for a dubins car written in python.
 
 
