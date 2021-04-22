@@ -11,17 +11,16 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
 
-
 class LimitSurface:
 
-    def __init__(self, coefficient, pressure, radius, normal_force):
+    def __init__(self, params): 
         """ 
         Constructor, creates initial limit surface
         """
-        self.fc = coefficient
-        self.pd = pressure 
-        self.radius = radius
-        self.nf = normal_force
+        self.fc = params['coefficient']
+        self.pd = params['pressure_distribution']
+        self.radius = params['radius']
+        self.nf = params['normal_force']
 
         self.ls_plot_vectors = []
         self.vs_plot_vectors = []
@@ -29,7 +28,8 @@ class LimitSurface:
                         'blue': (54/255,205/255,196/255,1.0), \
                         'yellow': (244/255,214/255,118/255,1.0), \
                         'gray': (92/255, 90/255, 90/255, 0.09), \
-                        'black':(20/255,20/255,20/255,1.0)}
+                        'black':(20/255,20/255,20/255,1.0),\
+                        'pink':(255/255,22/255,114/255,1.0)}
         
         self.create_surface()
     
@@ -320,7 +320,7 @@ class LimitSurface:
             X, Y, Z, U, V, W, color = zip(*[v])
             ax.quiver(float(X[0]), float(Y[0]), float(Z[0]), float(U[0]), float(V[0]), float(W[0]), color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
 
-        x_l, y_l, z_l = self.calculate_connector(np.array(self.vs_plot_vectors[-2][3:6], dtype=np.double), np.array(self.vs_plot_vectors[-1][3:6], dtype=np.double), 1.0,1.0,1.0)
+        x_l, y_l, z_l = self.calculate_connector(np.array(self.vs_plot_vectors[-3][3:6], dtype=np.double), np.array(self.vs_plot_vectors[-4][3:6], dtype=np.double), 1.0,1.0,1.0)
         ax.plot_wireframe(x_l, y_l, z_l,  rstride=1, cstride=1, color= self.colors['purple'], linewidths=4.0)
 
         # Unit velocity sphere
@@ -379,6 +379,7 @@ class LimitSurface:
             pop_a = mpatches.Patch(color=self.colors['blue'], label='Stable Velocity Twists')
             pop_b = mpatches.Patch(color=self.colors['black'], label="Car's limits")
             pop_c = mpatches.Patch(color=self.colors['purple'], label="Pushing limits")
+            pop_c = mpatches.Patch(color=self.colors['pink'], label="STABLE limits")
             ax.legend(handles=[pop_a,pop_b, pop_c], loc='lower left', bbox_to_anchor=(0.0, -0.1))
         else:
             pop_a = mpatches.Patch(color=self.colors['blue'], label='Velocity Twists')

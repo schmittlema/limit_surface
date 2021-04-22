@@ -7,4 +7,4 @@ Basic limit surface code for a dubins car written in python.
 `python3 test.py`
 
 ### Parameters
-Checkout `test.py`
+Checkout `config.yaml`

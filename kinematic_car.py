@@ -7,22 +7,22 @@ import numpy as np
 
 class Kinematic_Car:
 
-    def __init__(self, wheelbase, bumper2frontaxle, max_steering_angle):
+    def __init__(self, params): 
         """
         Constructor
         """
-        self.wheelbase = wheelbase 
-        self.bump2_front_axle = bumper2frontaxle 
-        self.max_steering_angle = max_steering_angle
+        self.speed = params['speed']
+        self.wheelbase = params['wheelbase']
+        self.bump2_front_axle = params['bumper2front_axle']
+        self.max_steering_angle = params['max_steering_angle']
         self.w = self.wheelbase/np.tan(self.max_steering_angle) # H + W/2 in kinematic car model
 
-    def find_velocity_limits(self, twist_cone, speed, dist):
+    def find_velocity_limits(self, twist_cone, dist):
         """
         Find the angular velocity limits pusher given twist cone * max steering angle 
 
         Params: 
             twist_cone ([4x6x1] ndarray): Four vectors making the composite twist cone
-            speed (double): fixed speed of car
             dist (double): COM to pusher 
         Returns:
            max_car ([3x1] ndarray): un-normalized vector for maximum angular velocity steering angle
@@ -32,11 +32,11 @@ class Kinematic_Car:
 
         # car's limits
         min_turning_radius = self.wheelbase/np.tan(self.max_steering_angle)
-        max_angular_velocity = speed/min_turning_radius
-        max_car = np.array([0, speed, max_angular_velocity])
+        max_angular_velocity = self.speed/min_turning_radius
+        max_car = np.array([0, self.speed, max_angular_velocity])
 
         # pushing limits
-        min_ls, max_ls = self.pushing_limits(twist_cone, speed)
+        min_ls, max_ls = self.pushing_limits(twist_cone)
 
         return max_car, min_ls, max_ls
 
@@ -63,16 +63,44 @@ class Kinematic_Car:
 
         return car_twist
 
-    def pushing_limits(self, twist_cone, speed):
+    def stable_limits(self, dist, left_cone, right_cone):
         """
-        Find the velocity limits of pushing 
+        Find angular velocity limits for stable pushing from output of STABLE
+        Params: 
+            dist (float): distance from block COM to edge
+            left_cone ([2x4] ndarray): int_x, int_y, vec_x, vec_y. Cone that spans no-slip ICs
+            right_cone ([2x4] ndarray): int_x, int_y, vec_x, vec_y 
+        Returns:
+           min_stable ([3x1] ndarray): un-normalized vector for minimum twist 
+           max_stable ([3x1] ndarray): un-normalized vector for maximum twist 
+        """ 
+
+        # find where car COR line (rear axle) intersects bottom of cone
+        # top of cone not possible with a car
+        car_ic_line = -1*(self.wheelbase + self.bump2_front_axle + dist)
+        c_l = (car_ic_line - left_cone[0,1])/left_cone[0,3]
+        c_r = (car_ic_line - right_cone[0,1])/right_cone[0,3]
+        left_int = c_l*left_cone[0,2:] + left_cone[0,:2]
+        right_int = c_r*right_cone[0,2:] + right_cone[0,:2]
+
+        # convert x values (turning radius) to max angular velocities
+        left_w = self.speed/left_int[0]
+        right_w = self.speed/right_int[0]
+
+        min_stable = np.array([0, self.speed, left_w])
+        max_stable = np.array([0, self.speed, right_w])
+
+        return min_stable, max_stable
+
+    def pushing_limits(self, twist_cone):
+        """
+        Find the velocity limits of pushing using block limits and car model
 
         Params: 
             twist_cone ([4x6x1] ndarray): Four vectors making the composite twist cone
-            speed (double): fixed speed of car
         Returns:
-           min_ls ([3x1] ndarray): un-normalized vector for minimum angular velocity
-           max_ls ([3x1] ndarray): un-normalized vector for maximum angular velocity
+           min_ls ([3x1] ndarray): un-normalized vector for minimum twist 
+           max_ls ([3x1] ndarray): un-normalized vector for maximum twist 
         """
         # probably could have written this better...
         
@@ -109,13 +137,13 @@ class Kinematic_Car:
         defining_vecs = np.array(defining_vecs)
 
         norm_vec = np.cross(defining_vecs[0,3:], defining_vecs[1,3:])
-        z = defining_vecs[0,5] + ((norm_vec[0] * defining_vecs[0,3] - norm_vec[1] * (speed - defining_vecs[0, 4]))/norm_vec[2])
+        z = defining_vecs[0,5] + ((norm_vec[0] * defining_vecs[0,3] - norm_vec[1] * (self.speed - defining_vecs[0, 4]))/norm_vec[2])
 
-        max_ls = np.array([0, speed, z])
+        max_ls = np.array([0, self.speed, z])
 
         norm_vec = np.cross(defining_vecs[2,3:], defining_vecs[3,3:])
-        z = defining_vecs[2,5] + ((norm_vec[0] * defining_vecs[2,3] - norm_vec[1] * (speed - defining_vecs[2, 4]))/norm_vec[2])
+        z = defining_vecs[2,5] + ((norm_vec[0] * defining_vecs[2,3] - norm_vec[1] * (self.speed - defining_vecs[2, 4]))/norm_vec[2])
 
-        min_ls = np.array([0, speed, z])
+        min_ls = np.array([0, self.speed, z])
 
         return min_ls, max_ls

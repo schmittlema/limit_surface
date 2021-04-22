@@ -1,0 +1,14 @@
+# Configuration file for test.py
+# You don't need a config file, but it makes things cleaner
+
+# Pushing params
+normal_force: 6.0 # N block weight
+dist: 0.05 # COM to edge of block
+ls_coefficient: 0.3 # coefficient of friction between block and floor
+coefficient: 0.5 # coefficient of friction between block and car
+
+# Car params
+wheelbase: 0.29 # meters
+bumper2front_axle: 0.07 # meters
+max_steering_angle: 0.35 # radians
+speed: 0.5 # m/s constant speed to push at

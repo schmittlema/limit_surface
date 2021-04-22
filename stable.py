@@ -25,30 +25,44 @@ class STABLE:
         """
         Calculates no slip ICs using vertical limit
         Params: 
-            comp_fcone ([4x3x1] ndarray): Four vectors making the composite wrench cone
+            comp_fcone ([4x3] ndarray): Four vectors making the composite wrench cone
             box ([4x2] ndarray): Four points of the box top_left, top_right, bottom_left, bottom_right
         Returns:
-            None
+            left_cone ([2x4] ndarray): int_x, int_y, vec_x, vec_y. Cone that spans no-slip ICs
+            right_cone ([2x4] ndarray): int_x, int_y, vec_x, vec_y 
         """
 
-        # right edge ICs
+        # left/right edge ICs
+        left_vecs = self.calculate_vertical_limit(comp_fcone[0], np.array([box[0], box[3]]))
         right_vecs = self.calculate_vertical_limit(comp_fcone[3], box[1:3,:])
 
-        # left edge ICs
-        left_vecs = self.calculate_vertical_limit(comp_fcone[0], np.array([box[0], box[3]]))
+        # left/right intersection points
+        left_int = self.find_intersection(left_vecs[0], right_vecs[1])
+        right_int = self.find_intersection(left_vecs[1], right_vecs[0])
 
-        # left intersection point
-        c2 = (left_vecs[0,1] - ((left_vecs[0,0]-right_vecs[1,0])*right_vecs[1,4])/right_vecs[1,3]) \
-                /(((left_vecs[0,3]*right_vecs[1,4])/right_vecs[1,3])-left_vecs[0,4])
-        c1 = (c2*left_vecs[0,3] + left_vecs[0,0] - right_vecs[1,0])/ right_vecs[1,3]
-        print(c1, c2)
-        c1 = (c2*left_vecs[0,4] + left_vecs[0,1] - right_vecs[1,1])/ right_vecs[1,4]
-        print(c1, c2)
-        # TODO fix my algrebra
-        #print(right_vecs[1,3:], left_vecs[0,3:])
-        #print(c1*right_vecs[1,3:], c2*left_vecs[0,3:])
-        #print(right_vecs[1,:3], left_vecs[0,:3])
-        #print(c1*right_vecs[1,3:]+right_vecs[1,:3], c2*left_vecs[0,3:]+left_vecs[0,:3])
+        # left/right 2D cone
+        left_cone = np.array([[left_int[0],left_int[1],-1*left_vecs[0,3],-1*left_vecs[0,4]]\
+                ,[left_int[0],left_int[1],-1*right_vecs[1,3],-1*right_vecs[1,4]]]) # flip backwards vecs
+        right_cone = np.array([[right_int[0],right_int[1],right_vecs[1,3],right_vecs[1,4]]\
+                ,[right_int[0],right_int[1],left_vecs[0,3],left_vecs[0,4]]])
+
+        return left_cone, right_cone
+
+    def find_intersection(self, v1, v2):
+        """ 
+        Finds intersection point between two vectors. 2D intersection only.
+        Find c values that intersect vectors using algebra then apply c to get pt 
+        Params:
+            v1 ([6x1] ndarray): first vector 
+            v2 ([6x1] ndarray): second vector
+        Returns:
+            int_pt ([2x1] ndarray): intersection point
+        """ 
+        c2 = ((v2[1]-v1[1]) /v1[4] - ((v2[0] - v1[0])/v1[3]))/(v2[3]/v1[3] - v2[4]/v1[4])
+        c1 = (c2*v2[3] + v2[0] - v1[0])/v1[3] 
+
+        return (c2*v2[3:] + v2[:3])[:2]
+
 
     def calculate_vertical_limit(self, vector, edge_pts):
         """
