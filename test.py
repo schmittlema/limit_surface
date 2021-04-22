@@ -8,18 +8,22 @@ from kinematic_car import Kinematic_Car
 
 # Parameters
 params = utils.load_params('config.yaml')
+
+# Block definitions
 params['radius'] = np.sqrt(2*(params['dist']**2)) # block radius in meters (assuming it is a circle)
 r, theta = sp.symbols('r theta') # can use these variables in pressure distribution
-
 # TODO square pressure distribution
 params['pressure_distribution']= params['normal_force']/(math.pi * params['radius']**2) # circular pressure distribution
+r1 = np.array([-params['dist'], params['dist']])
+r2 = np.array([params['dist'], params['dist']])
+r3 = np.array([-params['dist'], -params['dist']])
+r4 = np.array([params['dist'], -params['dist']])
+
 utils.print_params(params)
 
 # Pushing constraints
 ls = LimitSurface(params) 
-cone = ls.create_friction_cone(params['coefficient'], \
-        np.array([-params['dist'], -params['dist'], 0.0]), \
-        np.array([params['dist'], -params['dist'], 0.0]))
+cone = ls.create_friction_cone(params['coefficient'], r3, r4)
 twist_cone = ls.find_valid_twists(cone)
 
 # Motion of kinematic_car
@@ -36,9 +40,7 @@ print('Pushing max steering angle: {}'.format(round(max_steering_angle,3)))
 
 # STABLE -- alternative to friction cone through limit surface
 stable = STABLE()
-noslip_leftc, noslip_rightc = stable.calculate_noslip_ics(cone, \
-        np.array([[-params['dist'], params['dist']], [params['dist'], params['dist']], \
-        [-params['dist'], -params['dist']], [params['dist'], -params['dist']]]))
+noslip_leftc, noslip_rightc = stable.calculate_noslip_ics(cone, np.array([r1, r2, r3, r4]))
 min_stable, max_stable = kcar.stable_limits(params['dist'], noslip_leftc, noslip_rightc)
 stable_min_turning_radius = params['speed']/min(max_stable[-1], max_car[-1])
 stable_max_steering_angle = np.arctan(params['wheelbase']/stable_min_turning_radius)
@@ -47,7 +49,7 @@ print('STABLE Pushing max steering angle: {}'.format(round(stable_max_steering_a
 
 # Plot limits of car
 ls.plot_vec(max_car, 'vs', normalize=True, color='black')
-max_car[2] = max_car[2]*-1
+max_car[2] = max_car[2]*-1 # it's even
 ls.plot_vec(max_car, 'vs', normalize=True, color='black')
 
 # Plot limits of pushing
