@@ -2,13 +2,14 @@ import math
 import numpy as np
 import sympy as sp
 from limit_surface import LimitSurface
+from stable import STABLE
 from kinematic_car import Kinematic_Car
 
 # Pushing params
-normal_force = 5.0 # N block weight
+normal_force = 6.0 # N block weight
 dist = 0.05 # COM to edge of block
 radius = np.sqrt(2*(dist**2)) # block radius in meters (assuming it is a circle)
-ls_coefficient = 0.5 # coefficient of friction between block and floor
+ls_coefficient = 0.3 # coefficient of friction between block and floor
 coefficient = 0.5 # coefficient of friction between block and car
 
 print()
@@ -24,11 +25,13 @@ print()
 r, theta = sp.symbols('r theta') # can use these variables in pressure distribution
 
 # TODO square pressure distribution
-pressure_distribution = normal_force/(math.pi * radius**2) # circular press. distribution
+# debug
+pressure_distribution = normal_force/(math.pi * radius**2) # circular pressure distribution
+print(pressure_distribution, math.pi*radius**2)
 
 # Car params
-wheelbase = 0.225 # meters
-bumper_to_front_axle = 0.05 # meters
+wheelbase = 0.29 # meters
+bumper_to_front_axle = 0.07 # meters
 max_steering_angle = 0.35 # radians
 speed = 0.5 # m/s constant speed to push at
 
@@ -45,6 +48,10 @@ print()
 ls = LimitSurface(ls_coefficient, pressure_distribution, radius, normal_force)
 cone = ls.create_friction_cone(coefficient, np.array([-dist, -dist, 0.0]), np.array([dist, -dist, 0.0]))
 twist_cone = ls.find_valid_twists(cone)
+
+# STABLE -- alternative to limit surface
+stable = STABLE()
+stable.calculate_noslip_ics(cone, np.array([[-dist, dist], [dist, dist], [-dist, -dist], [dist, -dist]]))
 
 # Motion of kinematic_car
 kcar = Kinematic_Car(wheelbase, bumper_to_front_axle, max_steering_angle)

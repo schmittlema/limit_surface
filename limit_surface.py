@@ -19,19 +19,23 @@ class LimitSurface:
         Constructor, creates initial limit surface
         """
         self.fc = coefficient
-        self.pd = pressure # Assuming circular pressure distribution for now
+        self.pd = pressure 
         self.radius = radius
         self.nf = normal_force
 
         self.ls_plot_vectors = []
         self.vs_plot_vectors = []
-        self.colors = {'purple': (92/255,38/255,134/255,1.0), 'blue': (54/255,205/255,196/255,1.0), 'yellow': (244/255,214/255,118/255,1.0), 'gray': (92/255, 90/255, 90/255, 0.09), 'black':(20/255,20/255,20/255,1.0)}
+        self.colors = {'purple': (92/255,38/255,134/255,1.0), \
+                        'blue': (54/255,205/255,196/255,1.0), \
+                        'yellow': (244/255,214/255,118/255,1.0), \
+                        'gray': (92/255, 90/255, 90/255, 0.09), \
+                        'black':(20/255,20/255,20/255,1.0)}
         
         self.create_surface()
     
     def create_surface(self):
         """
-        Create limit surface ellipse approx
+        Create limit surface ellipsoid approx
 
         Params: 
             None
@@ -102,6 +106,7 @@ class LimitSurface:
         F_2 = f_2 + np.array([0,0,0,0,0,m_2])
         F_3 = f_1 + np.array([0,0,0,0,0,m_3])
         F_4 = f_2 + np.array([0,0,0,0,0,m_4])
+
         return np.array([F_1, F_2, F_3, F_4])
 
     def fit_vec_to_surface(self, vec, a=None, b=None, c=None):
@@ -124,7 +129,7 @@ class LimitSurface:
             c = self.m_max
 
         # find constant multiple and fit
-        # solving for c*F_1_hat that fits ellipsoid equation
+        # solving for c*v_hat_hat that fits ellipsoid equation
         fit = lambda v_hat: v_hat * math.sqrt((1/(v_hat[3]**2/a**2 + v_hat[4]**2/b**2 + v_hat[5]**2/c**2)))
 
         return fit(v_hat)
@@ -134,11 +139,13 @@ class LimitSurface:
         Plots limit surface
 
         Params: 
+            ax (matplotlib axis): axis to plot on
             cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
         Returns:
             None
         """
 
+        # If ax is none, create a figure
         if ax is None:
             fig = plt.figure(figsize=(10,8))  # Square figure
             ax = fig.add_subplot(111, projection='3d')
@@ -269,7 +276,7 @@ class LimitSurface:
 
     def plot_twists_on_ls(self, cone, ax):
         """
-        Plots friction cone on limit surface
+        Plots friction cone normal twists on limit surface
 
         Params: 
             cone ([4x3x1] ndarray): Four vectors making the composite wrench cone
