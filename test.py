@@ -23,7 +23,8 @@ r4 = np.array([params['dist'], -params['dist']])
 utils.print_params(params)
 
 # Pushing constraints
-ls = LimitSurface(params) 
+ls = LimitSurface(params)  
+# TODO should moment be around rotation point?
 cone = ls.create_friction_cone(params['coefficient'], r3, r4)
 twist_cone = ls.find_valid_twists(cone)
 

@@ -58,11 +58,11 @@ class Plotter:
         # Vectors (6D because not all vectors are from origin)
         for v in self.ls_plot_vectors:
             X, Y, Z, U, V, W, color = zip(*[v])
-            ax.quiver(X, Y, Z, U, V, W, color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
+            ax.quiver(float(X[0]), float(Y[0]), float(Z[0]), float(U[0]), float(V[0]), float(W[0]), color = self.colors[color[0]], arrow_length_ratio=0.2, linewidths=4.0)
 
-            normal_vector = ls.find_normal(v[0])
+            normal_vector = ls.find_normal(np.array(v[:-1], dtype=np.float))
             X, Y, Z, U, V, W = zip(*[normal_vector])
-            ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.3, linewidths=3.0)
+            ax.quiver(float(X[0]), float(Y[0]), float(Z[0]), float(U[0]), float(V[0]), float(W[0]), color = self.colors['blue'], arrow_length_ratio=0.3, linewidths=3.0)
 
         # plot friction cone
         if cone is not None:
@@ -202,15 +202,16 @@ class Plotter:
         """
 
         # Twist cone
-        abc = np.ones(twist_cone.shape[0])
-        ft_maxes = [self.ft_max]*twist_cone.shape[0]
-        m_maxes = [self.m_max]*twist_cone.shape[0]
-        twist_fit = np.array(list(map(utils.fit_vec_to_surface, ft_maxes, m_maxes, twist_cone, abc, abc, abc)))
+        if twist_cone is not None:
+            abc = np.ones(twist_cone.shape[0])
+            ft_maxes = [self.ft_max]*twist_cone.shape[0]
+            m_maxes = [self.m_max]*twist_cone.shape[0]
+            twist_fit = np.array(list(map(utils.fit_vec_to_surface, ft_maxes, m_maxes, twist_cone, abc, abc, abc)))
 
-        X, Y, Z, U, V, W = zip(*twist_fit)
-        ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.1, linewidths=4.0)
+            X, Y, Z, U, V, W = zip(*twist_fit)
+            ax.quiver(X, Y, Z, U, V, W, color = self.colors['blue'], arrow_length_ratio=0.1, linewidths=4.0)
 
-        self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0, color='blue')
+            self.connect_cone(ax, twist_cone, 1.0, 1.0, 1.0, color='blue')
 
         # Vectors
         for v in self.vs_plot_vectors:

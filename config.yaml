@@ -5,7 +5,7 @@
 normal_force: 6.0 # N block weight
 dist: 0.05 # COM to edge of block
 ls_coefficient: 0.3 # coefficient of friction between block and floor
-coefficient: 0.5 # coefficient of friction between block and car
+coefficient: 0.214 # coefficient of friction between block and car # sandpaper: 0.214, plastic bumper: 0.142
 
 # Car params
 wheelbase: 0.29 # meters

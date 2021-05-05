@@ -43,12 +43,24 @@ class LimitSurface:
         The point on the surface is defined by a wrench from the origin to the surface.
 
         Params: 
-            wrench ([3x1] ndarray): Force wrench from 0,0,0 to limit surface
+            wrench ([6x1] ndarray): Force wrench from 0,0,0 to limit surface
         Returns:
-            twist ([3x1] ndarray): Velocity twist normal to limit surface
+            twist ([6x1] ndarray): Velocity twist normal to limit surface
         """
         # take derivative of ellipsoid eq. at given wrench and use the coefficeints as vector
         return 2*wrench/np.array([1,1,1, self.ft_max**2,self.ft_max**2,self.m_max**2]) + np.array([wrench[3], wrench[4], wrench[5], 0, 0 ,0]) 
+
+    def find_wrench(self, twist):
+        """
+        Given twist vector, find limit surface point (wrench) that the twist is normal to
+        Params: 
+            twist ([6x1] ndarray): twist we wish to find point on limit surface to 
+        Returns:
+            wrench ([6x1] ndarray): Force wrench from 0,0,0 to limit surface
+        """
+        # rearange find_normal to solve for wrench from twist
+        wrench = twist / ((2/np.array([1,1,1,self.ft_max**2,self.ft_max**2,self.m_max**2])) + 1)
+        return wrench
 
     def find_valid_twists(self, cone):
         """

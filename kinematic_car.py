@@ -31,14 +31,28 @@ class Kinematic_Car:
         """
 
         # car's limits
-        min_turning_radius = self.wheelbase/np.tan(self.max_steering_angle)
-        max_angular_velocity = self.speed/min_turning_radius
-        max_car = np.array([0, self.speed, max_angular_velocity])
+        max_car = self.get_car_limits()
 
         # pushing limits
         min_ls, max_ls = self.pushing_limits(twist_cone)
 
         return max_car, min_ls, max_ls
+
+    def get_car_limits(self):
+        """
+        Find the angular velocity limits of car for given steering angle 
+
+        Params: 
+            None
+        Returns
+           max_car ([3x1] ndarray): un-normalized vector for maximum angular velocity steering angle
+        """
+        # car's limits
+        min_turning_radius = self.wheelbase/np.tan(self.max_steering_angle)
+        max_angular_velocity = self.speed/min_turning_radius
+        max_car = np.array([0, self.speed, max_angular_velocity])
+
+        return max_car
 
     def b2c_twists(self, block_twist, dist):
         """
@@ -52,7 +66,7 @@ class Kinematic_Car:
             car_twist ([6x1] ndarray): Vector twist for car (rear axle)
         """
 
-        r = np.array([0.0, -(self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from COM of block to center back axle
+        r = np.array([0.0, -(self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from com of block to center back axle
         omega = np.array([0.0, 0.0, block_twist[-1]]) # angular velocity
         diff_twist = np.cross(omega, r)
         twist_car_short = block_twist[3:] + diff_twist # add velocities
@@ -62,6 +76,29 @@ class Kinematic_Car:
         car_twist[3:] = twist_car_short
 
         return car_twist
+
+    def c2b_twists(self, car_twist, dist):
+        """
+        Convert car twist to block twist
+        v_car = v_block + w x r
+
+        Params: 
+            car_twist ([6x1] ndarray): Vector twist for car 
+            dist (double): COM to pusher 
+        Returns:
+            car_twist ([6x1] ndarray): Vector twist for car (rear axle)
+        """
+
+        r = np.array([0.0, (self.wheelbase + dist + self.bump2_front_axle), 0]) # vector from back axle to COM block
+        omega = np.array([0.0, 0.0, car_twist[-1]]) # angular velocity
+        diff_twist = np.cross(omega, r)
+        twist_block_short = car_twist[3:] + diff_twist # add velocities
+
+        # create full vector
+        block_twist = np.zeros((6,))
+        block_twist[3:] = twist_block_short
+
+        return block_twist
 
     def stable_limits(self, dist, left_cone, right_cone):
         """
