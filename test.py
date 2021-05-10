@@ -5,7 +5,7 @@ import utils
 from plotter import Plotter
 from limit_surface import LimitSurface
 from stable import STABLE
-from kinematic_car import Kinematic_Car
+from kinematic_car import KinematicCar
 
 # Parameters
 params = utils.load_params('config.yaml')
@@ -29,7 +29,7 @@ cone = ls.create_friction_cone(params['coefficient'], r3, r4)
 twist_cone = ls.find_valid_twists(cone)
 
 # Motion of kinematic_car
-kcar = Kinematic_Car(params)
+kcar = KinematicCar(params)
 dists = np.ones(twist_cone.shape[0]) * params['dist']
 twist_cone_converted = np.array(list(map(kcar.b2c_twists,twist_cone, dists)))
 max_car, min_ls, max_ls = kcar.find_velocity_limits(twist_cone_converted, params['dist'])

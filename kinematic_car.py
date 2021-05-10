@@ -5,7 +5,7 @@
 
 import numpy as np
 
-class Kinematic_Car:
+class KinematicCar:
 
     def __init__(self, params): 
         """

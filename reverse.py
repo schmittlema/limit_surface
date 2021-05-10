@@ -7,7 +7,7 @@ import sympy as sp
 import utils
 from plotter import Plotter
 from limit_surface import LimitSurface
-from kinematic_car import Kinematic_Car
+from kinematic_car import KinematicCar
 
 # Parameters
 params = utils.load_params('config.yaml')
@@ -23,7 +23,7 @@ maxp_twist[4:] = [params['speed'], max_push]
 minp_twist[4:] = [params['speed'], min_push]
 
 # Motion of kinematic_car
-kcar = Kinematic_Car(params)
+kcar = KinematicCar(params)
 print(maxp_twist)
 twist_converted = kcar.c2b_twists(maxp_twist, params['dist'])
 
